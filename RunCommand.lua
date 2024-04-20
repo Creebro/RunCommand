@@ -15,8 +15,8 @@ local HttpService = game:GetService("HttpService")
 -- Plugin Visual Settings
 local toolbar = plugin:CreateToolbar("CDT Studio Tools")
 
-local openScriptButton: PluginToolbarButton = toolbar:CreateButton("Testing Open Script", "Open RunCommands", "rbxassetid://14978048121")
-local runScriptButton: PluginToolbarButton = toolbar:CreateButton("Testing  Script", "Create an RunCommand", "rbxassetid://14978048121")
+local openScriptButton: PluginToolbarButton = toolbar:CreateButton("Open Script", "Open RunCommands", "rbxassetid://14978048121")
+local runScriptButton: PluginToolbarButton = toolbar:CreateButton("Run Script", "Run the selected RunCommand Script", "rbxassetid://14978048121")
 
 runScriptButton.ClickableWhenViewportHidden = true
 openScriptButton.ClickableWhenViewportHidden = true
@@ -37,10 +37,10 @@ local function ExecuteScript(selectedScript: Script)
 
 	local newScript: ModuleScript = Instance.new("ModuleScript")
 
-	newScript.Name = HttpService:GenerateGUID()
+	newScript.Name = `RunCommandScript/{selectedScript.Name}`
 
 	local wrapperCode = `\
-		return coroutine.create(function() {selectedScript.Source} end)\
+	return coroutine.create(function() {selectedScript.Source} end)\
 	`
 	ScriptEditorService:UpdateSourceAsync(newScript, function(oldContent: string)
 		return wrapperCode
@@ -80,6 +80,7 @@ local function onRunScriptButtonClicked()
 
 	for _, selected: Instance in selectedObjects do
 		if selected:IsA("Script") then
+			print(`Executing script {selected.Name}`)
 			ExecuteScript(selected)
 		end
 	end
@@ -93,9 +94,8 @@ local function onOpenScriptButtonClicked()
 	newScript.Name = "NewCommand"
 
 	newScript.Source = [[-- Click Run Script to execute!
-		print("Hello World")
+print("Hello World")
 	]]
-
 	Selection:Set({newScript})
 	plugin:OpenScript(newScript)
 end
