@@ -10,17 +10,22 @@ local Selection = game:GetService("Selection")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService") 
 local ScriptEditorService = game:GetService("ScriptEditorService")
+local StudioService = game:GetService("StudioService")
 local HttpService = game:GetService("HttpService")
 
 -- Plugin Visual Settings
 local toolbar = plugin:CreateToolbar("CDT Studio Tools")
 
 local openScriptButton: PluginToolbarButton = toolbar:CreateButton("Open Script", "Open RunCommands", "rbxassetid://14978048121")
-local runScriptButton: PluginToolbarButton = toolbar:CreateButton("Run Script", "Run the selected RunCommand Script", "rbxassetid://14978048121")
+local runScriptFromSelectionButton: PluginToolbarButton = toolbar:CreateButton("Run From Selected", "Create an RunCommand", "rbxassetid://14978048121")
+local runScriptFromEditorButton: PluginToolbarButton = toolbar:CreateButton("Run From Editor", "Create an RunCommand", "rbxassetid://14978048121")
 
-runScriptButton.ClickableWhenViewportHidden = true
 openScriptButton.ClickableWhenViewportHidden = true
-runScriptButton.Enabled = false
+runScriptFromSelectionButton.ClickableWhenViewportHidden = true
+runScriptFromEditorButton.ClickableWhenViewportHidden = true
+
+runScriptFromSelectionButton.Enabled = false
+runScriptFromEditorButton.Enabled = false
 
 -- Creates a folder or fetches the current one 
 local function GetRunCommandFolder(): Folder
@@ -39,17 +44,15 @@ local function ExecuteScript(selectedScript: Script)
 
 	newScript.Name = `RunCommandScript/{selectedScript.Name}`
 
-	local wrapperCode = `\
-	return coroutine.create(function() {selectedScript.Source} end)\
-	`
+	local wrapperCode = `\n return coroutine.create(function() {selectedScript.Source} end)`
 	ScriptEditorService:UpdateSourceAsync(newScript, function(oldContent: string)
 		return wrapperCode
 	end)
 
-	local thread: thread = require(newScript)
+	local thread: thread = require(newScript) :: thread
 	local destroyListener: RBXScriptConnection? = selectedScript:GetPropertyChangedSignal("Parent"):Connect(function()
-		print("Destroying Module Script")
 		if thread then
+			print("Destroying Module Script")
 			coroutine.close(thread)
 		end
 	end)
@@ -57,7 +60,8 @@ local function ExecuteScript(selectedScript: Script)
 	local success: boolean, runtimeErrorMessage: string = coroutine.resume(thread)
 
 	if not success then
-		warn(selectedScript.Name, " got this error: ", runtimeErrorMessage)
+		warn(selectedScript.Name, " got this error: ")
+		warn(runtimeErrorMessage)
 	end
 
 	while coroutine.status(thread) ~= "dead" do
@@ -75,7 +79,18 @@ local function ExecuteScript(selectedScript: Script)
 
 end
 
-local function onRunScriptButtonClicked()
+-- Fires respective functions on mouse clicks
+openScriptButton.Click:Connect(function() 
+	local newScript: Script = Instance.new("Script", GetRunCommandFolder())
+	newScript.Name = "NewCommand"
+
+	newScript.Source = "--Click Run Script to execute!\nprint(\"Hello To Run-Command!\")"
+
+	Selection:Set({newScript})
+	plugin:OpenScript(newScript)	
+end)
+
+runScriptFromSelectionButton.Click:Connect(function() 
 	local selectedObjects: {Instance} = Selection:Get()
 
 	for _, selected: Instance in selectedObjects do
@@ -84,25 +99,30 @@ local function onRunScriptButtonClicked()
 			ExecuteScript(selected)
 		end
 	end
+end)
 
-end
 
+-- Listens to when you are currently editing a script or not
+local currentlyEditing: LuaSourceContainer?
+StudioService:GetPropertyChangedSignal("ActiveScript"):Connect(function()
 
-local function onOpenScriptButtonClicked()
+	local newScript: LuaSourceContainer? = StudioService.ActiveScript
 
-	local newScript: Script = Instance.new("Script", GetRunCommandFolder())
-	newScript.Name = "NewCommand"
+	if not newScript then
+		runScriptFromEditorButton.Enabled = false
+	else
+		runScriptFromEditorButton.Enabled = true
+		currentlyEditing = newScript
+	end 
+	
+end)
 
-	newScript.Source = [[-- Click Run Script to execute!
-print("Hello World")
-	]]
-	Selection:Set({newScript})
-	plugin:OpenScript(newScript)
-end
+runScriptFromEditorButton.Click:Connect(function() 
+	if currentlyEditing then
+		ExecuteScript(currentlyEditing :: Script)
+	end
+end)
 
--- Fires respective functions on mouse clicks
-openScriptButton.Click:Connect(onOpenScriptButtonClicked)
-runScriptButton.Click:Connect(onRunScriptButtonClicked)
 
 -- When you select a different objects enable run script button
 Selection.SelectionChanged:Connect(function()
@@ -110,10 +130,10 @@ Selection.SelectionChanged:Connect(function()
 
 	for _, selected: Instance in selectedObjects do
 		if selected:IsA("Script") then
-			runScriptButton.Enabled = true
+			runScriptFromSelectionButton.Enabled = true
 			return
 		end
 	end
 
-	runScriptButton.Enabled = false
+	runScriptFromSelectionButton.Enabled = false
 end)
