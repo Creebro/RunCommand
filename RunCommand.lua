@@ -15,7 +15,7 @@ local HttpService = game:GetService("HttpService")
 -- Plugin Visual Settings
 local toolbar = plugin:CreateToolbar("CDT Studio Tools")
 
-local openScriptButton: PluginToolbarButton = toolbar:CreateButton("Testing Open Script", "Open RunCommands", "rbxassetid://14978048121")
+local openScriptButton: PluginToolbarButton = toolbar:CreateButton("Testing New Script", "Open RunCommands", "rbxassetid://14978048121")
 local runScriptButton: PluginToolbarButton = toolbar:CreateButton("Testing  Script", "Create an RunCommand", "rbxassetid://14978048121")
 
 runScriptButton.ClickableWhenViewportHidden = true
@@ -90,10 +90,10 @@ end
 local function onOpenScriptButtonClicked()
 
 	local newScript: Script = Instance.new("Script", GetRunCommandFolder())
-	newScript.Name = "NewCommand"
+	newScript.Name = "NewScript"
 
-	newScript.Source = [[-- Click Run Script to execute!
-		print("Hello World")
+	newScript.Source = [[-- Click Run Script to executec code!
+		print("Hello New World")
 	]]
 
 	Selection:Set({newScript})
