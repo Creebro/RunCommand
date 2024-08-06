@@ -92,7 +92,7 @@ openScriptButton.Click:Connect(function()
 	plugin:OpenScript(newScript)	
 end)
 
-local previousSelected = nil
+local lastRanScript = nil
 
 runScriptFromSelectionButton.Click:Connect(function() 
 	local selectedObjects: {Instance} = Selection:Get()
@@ -100,7 +100,7 @@ runScriptFromSelectionButton.Click:Connect(function()
 	for _, selected: Instance in selectedObjects do
 		if selected:IsA("Script") then
 			ExecuteScript(selected)
-			previousSelected = selected
+			lastRanScript = selected
 		end
 	end
 end)
@@ -124,12 +124,13 @@ end)
 runScriptFromEditorButton.Click:Connect(function() 
 	if currentlyEditing then
 		ExecuteScript(currentlyEditing :: Script)
+		lastRanScript = currentlyEditing
 	end
 end)
 
 runPreviousScript.Click:Connect(function()
 	local runCommandFolder = GetRunCommandFolder()
-	local shouldExecute = previousSelected and previousSelected.Parent == runCommandFolder
+	local shouldExecute = lastRanScript and lastRanScript.Parent == runCommandFolder
 	
 	if shouldExecute then
 		ExecuteScript(previousSelected :: Script)
