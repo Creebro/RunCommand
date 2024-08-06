@@ -101,6 +101,7 @@ runScriptFromSelectionButton.Click:Connect(function()
 		if selected:IsA("Script") then
 			ExecuteScript(selected)
 			lastRanScript = selected
+			runPreviousScript.Enabled = true
 		end
 	end
 end)
@@ -125,12 +126,19 @@ runScriptFromEditorButton.Click:Connect(function()
 	if currentlyEditing then
 		ExecuteScript(currentlyEditing :: Script)
 		lastRanScript = currentlyEditing
+		runPreviousScript.Enabled = true
 	end
 end)
 
 runPreviousScript.Click:Connect(function()
 	local runCommandFolder = GetRunCommandFolder()
-	local shouldExecute = lastRanScript and lastRanScript.Parent == runCommandFolder
+	if not lastRanScript then return end
+	local isParented = lastRanScript and lastRanScript.Parent == runCommandFolder
+	local shouldExecute = lastRanScript and isParented
+
+	if not isParented then
+		runPreviousScript.Enabled = false
+	end
 	
 	if shouldExecute then
 		ExecuteScript(previousSelected :: Script)
