@@ -19,16 +19,16 @@ local toolbar = plugin:CreateToolbar("CDT Studio Tools")
 local openScriptButton: PluginToolbarButton = toolbar:CreateButton("Open Script", "Open RunCommands", "rbxassetid://14978048121")
 local runScriptFromSelectionButton: PluginToolbarButton = toolbar:CreateButton("Run From Selected", "Run selected scripts", "rbxassetid://14978048121")
 local runScriptFromEditorButton: PluginToolbarButton = toolbar:CreateButton("Run From Editor", "Run script open in editor", "rbxassetid://14978048121")
-local runPreviousScript: PluginToolbarButton = toolbar:CreateButton("Run Previous", "Run last selected script", "rbxassetid://14978048121")
+local runPreviousScriptButton: PluginToolbarButton = toolbar:CreateButton("Run Previous", "Run last selected script", "rbxassetid://14978048121")
 
 openScriptButton.ClickableWhenViewportHidden = true
 runScriptFromSelectionButton.ClickableWhenViewportHidden = true
 runScriptFromEditorButton.ClickableWhenViewportHidden = true
-runPreviousScript.ClickableWhenViewportHidden = true
+runPreviousScriptButton.ClickableWhenViewportHidden = true
 
 runScriptFromSelectionButton.Enabled = false
 runScriptFromEditorButton.Enabled = false
-runPreviousScript.Enabled = false
+runPreviousScriptButton.Enabled = false
 
 -- Creates a folder or fetches the current one 
 local function GetRunCommandFolder(): Folder
@@ -101,7 +101,7 @@ runScriptFromSelectionButton.Click:Connect(function()
 		if selected:IsA("Script") then
 			ExecuteScript(selected)
 			lastRanScript = selected
-			runPreviousScript.Enabled = true
+			runPreviousScriptButton.Enabled = true
 		end
 	end
 end)
@@ -126,18 +126,18 @@ runScriptFromEditorButton.Click:Connect(function()
 	if currentlyEditing then
 		ExecuteScript(currentlyEditing :: Script)
 		lastRanScript = currentlyEditing
-		runPreviousScript.Enabled = true
+		runPreviousScriptButton.Enabled = true
 	end
 end)
 
-runPreviousScript.Click:Connect(function()
+runPreviousScriptButton.Click:Connect(function()
 	local runCommandFolder = GetRunCommandFolder()
 	if not lastRanScript then return end
 	local isParented = lastRanScript and lastRanScript.Parent == runCommandFolder
 	local shouldExecute = lastRanScript and isParented
 
 	if not isParented then
-		runPreviousScript.Enabled = false
+		runPreviousScriptButton.Enabled = false
 	end
 	
 	if shouldExecute then
