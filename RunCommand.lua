@@ -113,9 +113,9 @@ StudioService:GetPropertyChangedSignal("ActiveScript"):Connect(function()
 	local newScript: LuaSourceContainer? = StudioService.ActiveScript
 
 	if not newScript then
-		runPreviousScript.Enabled = false
+		runScriptFromEditorButton.Enabled = false
 	else
-		runPreviousScript.Enabled = true
+		runScriptFromEditorButton.Enabled = true
 		currentlyEditing = newScript
 	end
 
