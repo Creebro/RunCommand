@@ -17,15 +17,18 @@ local HttpService = game:GetService("HttpService")
 local toolbar = plugin:CreateToolbar("CDT Studio Tools")
 
 local openScriptButton: PluginToolbarButton = toolbar:CreateButton("Open Script", "Open RunCommands", "rbxassetid://14978048121")
-local runScriptFromSelectionButton: PluginToolbarButton = toolbar:CreateButton("Run From Selected", "Create an RunCommand", "rbxassetid://14978048121")
-local runScriptFromEditorButton: PluginToolbarButton = toolbar:CreateButton("Run From Editor", "Create an RunCommand", "rbxassetid://14978048121")
+local runScriptFromSelectionButton: PluginToolbarButton = toolbar:CreateButton("Run From Selected", "Run selected scripts", "rbxassetid://14978048121")
+local runScriptFromEditorButton: PluginToolbarButton = toolbar:CreateButton("Run From Editor", "Run script open in editor", "rbxassetid://14978048121")
+local runPreviousScript: PluginToolbarButton = toolbar:CreateButton("Run Previous", "Run last selected script", "rbxassetid://14978048121")
 
 openScriptButton.ClickableWhenViewportHidden = true
 runScriptFromSelectionButton.ClickableWhenViewportHidden = true
 runScriptFromEditorButton.ClickableWhenViewportHidden = true
+runPreviousScript.ClickableWhenViewportHidden = true
 
 runScriptFromSelectionButton.Enabled = false
 runScriptFromEditorButton.Enabled = false
+runPreviousScript.Enabled = false
 
 -- Creates a folder or fetches the current one 
 local function GetRunCommandFolder(): Folder
@@ -39,7 +42,6 @@ end
 
 -- Executes the script that is given to the function
 local function ExecuteScript(selectedScript: Script)
-
 	local newScript: ModuleScript = Instance.new("ModuleScript")
 
 	newScript.Name = HttpService:GenerateGUID()
@@ -90,12 +92,15 @@ openScriptButton.Click:Connect(function()
 	plugin:OpenScript(newScript)	
 end)
 
+local previousSelected = nil
+
 runScriptFromSelectionButton.Click:Connect(function() 
 	local selectedObjects: {Instance} = Selection:Get()
 
 	for _, selected: Instance in selectedObjects do
 		if selected:IsA("Script") then
 			ExecuteScript(selected)
+			previousSelected = selected
 		end
 	end
 end)
@@ -108,17 +113,26 @@ StudioService:GetPropertyChangedSignal("ActiveScript"):Connect(function()
 	local newScript: LuaSourceContainer? = StudioService.ActiveScript
 
 	if not newScript then
-		runScriptFromEditorButton.Enabled = false
+		runPreviousScript.Enabled = false
 	else
-		runScriptFromEditorButton.Enabled = true
+		runPreviousScript.Enabled = true
 		currentlyEditing = newScript
-	end 
-	
+	end
+
 end)
 
 runScriptFromEditorButton.Click:Connect(function() 
 	if currentlyEditing then
 		ExecuteScript(currentlyEditing :: Script)
+	end
+end)
+
+runPreviousScript.Click:Connect(function()
+	local runCommandFolder = GetRunCommandFolder()
+	local shouldExecute = previousSelected and previousSelected.Parent == runCommandFolder
+	
+	if shouldExecute then
+		ExecuteScript(previousSelected :: Script)
 	end
 end)
 
